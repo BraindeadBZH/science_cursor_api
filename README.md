@@ -1,2 +1,2 @@
-# science_cursor_api
-The API server for Science Cursor
+# ScicenceCursor.org
+This repository contains the source code, under MIT, for the ScicenceCursor.org server API.
