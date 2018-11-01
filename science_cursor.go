@@ -5,6 +5,9 @@ import (
 	"github.com/go-pg/pg"
 )
 
+// DbHandle gives access to the database
+var dbHandle *pg.DB
+
 // Run starts the API using the given config file
 func Run(configFile string) error {
 	fmt.Println("Starting API using config file:", configFile)
@@ -14,12 +17,20 @@ func Run(configFile string) error {
 		return fmt.Errorf("Unable to load configuration: '%s'", err.Error())
 	}
 
-	db := pg.Connect(
+	dbHandle = pg.Connect(
 		&pg.Options{Addr: apiConfig.Database.Server,
 			Database: apiConfig.Database.Database,
 			User:     apiConfig.Database.User,
 			Password: apiConfig.Database.Password})
-	defer db.Close()
+
+	err = createTables()
+	if err != nil {
+		return fmt.Errorf("Error while creating tables: '%s'", err.Error())
+	}
+
+	authenticationRoutes()
+
+	httpListen()
 
 	return nil
 }

@@ -6,20 +6,32 @@ import (
 	"os"
 )
 
-// DatabaseConfiguration stores the configuration for the database access
-type DatabaseConfiguration struct {
+type generalConfiguration struct {
+	Production    bool
+	AdminEmail    string
+	AdminPassword string
+}
+
+type databaseConfiguration struct {
 	Server   string
 	Database string
 	User     string
 	Password string
 }
 
-// Configuration stores the configuration for the API
-type Configuration struct {
-	Database DatabaseConfiguration
+type httpConfiguration struct {
+	Address    string
+	Port       uint16
+	SessionKey []byte
 }
 
-var apiConfig Configuration
+type configuration struct {
+	General  generalConfiguration
+	Database databaseConfiguration
+	HTTP     httpConfiguration
+}
+
+var apiConfig configuration
 
 func loadConfiguration(configFile string) error {
 	file, err := os.Open(configFile)

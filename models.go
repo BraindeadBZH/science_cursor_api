@@ -4,7 +4,7 @@ package api
 type User struct {
 	ID       int64
 	Name     string
-	Email    string
+	Email    string   `sql:",unique"`
 	Roles    []string `sql:",array"`
 	Salt     []byte
 	Password []byte
