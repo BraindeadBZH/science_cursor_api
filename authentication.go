@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -15,16 +14,8 @@ func authenticationRoutes() {
 func login(req *http.Request, session *sessionData) (interface{}, error) {
 	log.Println("Call - login")
 	if !session.Auth {
-		decoder := json.NewDecoder(req.Body)
 		var form loginForm
-		err := decoder.Decode(&form)
-		if err != nil {
-			log.Println("Unable to read form:", err.Error())
-			return nil, errors.New("Unable to read login form")
-		}
-
-		valid := loginFormValidation.Validate(form)
-
+		valid := retrieveForm(&form, req, loginFormValidation)
 		if valid.HasErrors() {
 			log.Println("Login form is invalid:", valid.Error())
 			return nil, errors.New("Invalid login form")
@@ -36,7 +27,7 @@ func login(req *http.Request, session *sessionData) (interface{}, error) {
 			return nil, errors.New("Unable to find user")
 		}
 
-		err = user.authenticate(form.Password)
+		err := user.authenticate(form.Password)
 		if err != nil {
 			log.Println("Password check failed")
 			return nil, errors.New("Password check failed")
