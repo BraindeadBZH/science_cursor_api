@@ -11,12 +11,20 @@ func createTables() error {
 		return fmt.Errorf("Could not start table creation transaction: '%s'", err.Error())
 	}
 	defer tx.Rollback()
-	err = dbHandle.CreateTable(interface{}((*User)(nil)), &orm.CreateTableOptions{IfNotExists: true})
+
+	// Table users
+	err = dbHandle.CreateTable(&userModel{}, &orm.CreateTableOptions{IfNotExists: true})
 	if err != nil {
-		return fmt.Errorf("Error while creating User table: '%s'", err.Error())
+		return fmt.Errorf("Error while creating users table: '%s'", err.Error())
 	}
 
-	// Admin Account Creation //
+	// Table sessions
+	err = dbHandle.CreateTable(&sessionModel{}, &orm.CreateTableOptions{IfNotExists: true})
+	if err != nil {
+		return fmt.Errorf("Error while creating sessions table: '%s'", err.Error())
+	}
+
+	// Admin Account Creation
 	exists, err := userExists(apiConfig.General.AdminEmail)
 	if err != nil {
 		return fmt.Errorf("Error check admin existance: '%s'", err.Error())

@@ -7,16 +7,16 @@ import (
 )
 
 func userExists(email string) (bool, error) {
-	count, err := dbHandle.Model((*User)(nil)).Where("email = ?", email).Count()
+	count, err := dbHandle.Model(&userModel{}).Where("email = ?", email).Count()
 	if err != nil {
 		return false, fmt.Errorf("Could not check user existance: '%s'", err.Error())
 	}
 	return count > 0, nil
 }
 
-func getUserByEmail(email string) (*User, error) {
-	user := &User{}
-	err := dbHandle.Model((*User)(nil)).Where("email = ?", email).Select(user)
+func getUserByEmail(email string) (*userModel, error) {
+	user := &userModel{}
+	err := dbHandle.Model(&userModel{}).Where("email = ?", email).Select(user)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func getUserByEmail(email string) (*User, error) {
 }
 
 func createUser(email string, name string, roles []string, password string) error {
-	user := &User{}
+	user := &userModel{}
 	user.Email = email
 	user.Name = name
 	user.Roles = roles
@@ -45,4 +45,8 @@ func createUser(email string, name string, roles []string, password string) erro
 		return fmt.Errorf("Error while creating user: '%s'", err.Error())
 	}
 	return nil
+}
+
+func (user *userModel) authenticate(password string) error {
+	return bcrypt.CompareHashAndPassword(user.Password, append([]byte(password), user.Salt...))
 }

@@ -3,8 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"github.com/gorilla/sessions"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
 )
@@ -14,10 +12,9 @@ func authenticationRoutes() {
 	router.HandleFunc("/logout", handlerWithSession(logout)).Methods("POST")
 }
 
-func login(req *http.Request, session *sessions.Session) (interface{}, error) {
+func login(req *http.Request, session *sessionData) (interface{}, error) {
 	log.Println("Call - login")
-	loggedIn, exists := session.Values["loggedIn"]
-	if !exists || !loggedIn.(bool) {
+	if !session.Auth {
 		decoder := json.NewDecoder(req.Body)
 		var form loginForm
 		err := decoder.Decode(&form)
@@ -39,13 +36,16 @@ func login(req *http.Request, session *sessions.Session) (interface{}, error) {
 			return nil, errors.New("Unable to find user")
 		}
 
-		err = bcrypt.CompareHashAndPassword(user.Password, append([]byte(form.Password), user.Salt...))
+		err = user.authenticate(form.Password)
 		if err != nil {
 			log.Println("Password check failed")
 			return nil, errors.New("Password check failed")
 		}
 
-		session.Values["loggedIn"] = true
+		session.Auth = true
+		session.Email = user.Email
+		session.Name = user.Name
+		session.Roles = user.Roles
 
 		return nil, nil
 	}
@@ -53,10 +53,8 @@ func login(req *http.Request, session *sessions.Session) (interface{}, error) {
 	return nil, errors.New("Already logged in")
 }
 
-func logout(req *http.Request, session *sessions.Session) (interface{}, error) {
+func logout(req *http.Request, session *sessionData) (interface{}, error) {
 	log.Println("Call - logout")
-	// Clear the session
-	session.Values = make(map[interface{}]interface{})
-
+	session.MarkedForDeletion = true
 	return nil, nil
 }
