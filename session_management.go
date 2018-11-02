@@ -51,3 +51,26 @@ func (session *sessionModel) save() error {
 func (session *sessionModel) destroy() error {
 	return dbHandle.Delete(session)
 }
+
+func sessionCleanupRoutine() {
+	for {
+		fmt.Println("Cleaning session - Begin")
+		var sessionDestroyed = 0
+		// We get the oldest 1000 session
+		var sessions []sessionModel
+		err := dbHandle.Model(&sessions).Order("last_used ASC").Limit(1000).Select()
+		if err != nil {
+			fmt.Println("Cannot cleanup session:", err.Error())
+		} else {
+			for _, session := range sessions {
+				diff := time.Now().Sub(session.LastUsed)
+				if diff.Hours() > 24 {
+					session.destroy()
+					sessionDestroyed++
+				}
+			}
+		}
+		fmt.Printf("Cleaning session - End - %d session(s) destroyed\n", sessionDestroyed)
+		time.Sleep(time.Hour)
+	}
+}

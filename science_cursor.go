@@ -28,6 +28,8 @@ func Run(configFile string) error {
 		return fmt.Errorf("Error while creating tables: '%s'", err.Error())
 	}
 
+	go sessionCleanupRoutine()
+
 	authenticationRoutes()
 
 	httpListen()
